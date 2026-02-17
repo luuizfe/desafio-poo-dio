@@ -1,22 +1,35 @@
 package br.com.dio.desafio.dominio;
 
-import java.util.*;
+import jdk.jfr.DataAmount;
+import lombok.Data;
 
+import java.util.*;
+@Data
 public class Dev {
     private String nome;
+    private Nivel nivel = Nivel.Estagiário;
+    private int xp = 0;
+
     private Set<Conteudo> conteudosInscritos = new LinkedHashSet<>();
     private Set<Conteudo> conteudosConcluidos = new LinkedHashSet<>();
 
-    public void inscreverBootcamp(Bootcamp bootcamp){
+    public void inscreverBootcamp(Bootcamp bootcamp) {
         this.conteudosInscritos.addAll(bootcamp.getConteudos());
         bootcamp.getDevsInscritos().add(this);
     }
 
     public void progredir() {
-        Optional<Conteudo> conteudo = this.conteudosInscritos.stream().findFirst();
-        if(conteudo.isPresent()) {
-            this.conteudosConcluidos.add(conteudo.get());
-            this.conteudosInscritos.remove(conteudo.get());
+        Iterator<Conteudo> iterator = conteudosInscritos.iterator();
+
+        if (iterator.hasNext()) {
+            Conteudo conteudo = iterator.next();
+
+            conteudosConcluidos.add(conteudo);
+            xp += conteudo.calcularXp(); // acumula XP
+            iterator.remove();
+
+            calcularNivel(); // verifica se mudou nível
+
         } else {
             System.err.println("Você não está matriculado em nenhum conteúdo!");
         }
@@ -25,7 +38,7 @@ public class Dev {
     public double calcularTotalXp() {
         Iterator<Conteudo> iterator = this.conteudosConcluidos.iterator();
         double soma = 0;
-        while(iterator.hasNext()){
+        while (iterator.hasNext()) {
             double next = iterator.next().calcularXp();
             soma += next;
         }
@@ -37,30 +50,22 @@ public class Dev {
                 .sum();*/
     }
 
+    public void calcularNivel() {
+        if (xp < 100) {
+            nivel = Nivel.Estagiário;
+        } else if (xp < 300) {
+            nivel = Nivel.Júnior;
+        } else if (xp < 450) {
+            nivel = Nivel.Pleno;
+        } else if (xp < 700) {
+            nivel = Nivel.Senior;
+        }else if (xp < 800) {
+            nivel = Nivel.Expert;
 
-    public String getNome() {
-        return nome;
+        }
+
     }
 
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
-
-    public Set<Conteudo> getConteudosInscritos() {
-        return conteudosInscritos;
-    }
-
-    public void setConteudosInscritos(Set<Conteudo> conteudosInscritos) {
-        this.conteudosInscritos = conteudosInscritos;
-    }
-
-    public Set<Conteudo> getConteudosConcluidos() {
-        return conteudosConcluidos;
-    }
-
-    public void setConteudosConcluidos(Set<Conteudo> conteudosConcluidos) {
-        this.conteudosConcluidos = conteudosConcluidos;
-    }
 
     @Override
     public boolean equals(Object o) {
